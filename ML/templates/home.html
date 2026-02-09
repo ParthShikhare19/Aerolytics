@@ -3,78 +3,253 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Diabetes Prediction</title>
+    <title>Air Quality Index Prediction</title>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            font-family: "Segoe UI", Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', 'Segoe UI', Arial, sans-serif;
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             flex-direction: column;
             align-items: center;
+            background: url('https://images.unsplash.com/photo-1534088568595-a066f410bcda?q=80&w=2071') center/cover no-repeat fixed;
+            position: relative;
+            padding: 20px;
         }
 
-        form {
-            background: white;
-            padding: 30px 40px;
-            border-radius: 12px;
-            width: 350px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.85));
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 480px;
         }
 
         h1 {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
             color: #ffffff;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 4px 8px rgba(0, 0, 0, 0.3);
+            letter-spacing: 1px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.1rem;
+            margin-bottom: 35px;
+            text-shadow: 1px 2px 4px rgba(0, 0, 0, 0.2);
+            animation: fadeInDown 1s ease;
+        }
+
+        form {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(148, 163, 184, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 1s ease;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #ffffff;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
         }
 
         input {
             width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            margin-bottom: 15px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
-            font-size: 14px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(148, 163, 184, 0.4);
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(5px);
+            color: #e2e8f0;
+            font-size: 15px;
             outline: none;
-            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        input::placeholder {
+            color: rgba(203, 213, 225, 0.6);
+        }
+
+        input:focus {
+            border: 1px solid rgba(96, 165, 250, 0.8);
+            background: rgba(30, 41, 59, 0.6);
+            box-shadow: 0 0 15px rgba(96, 165, 250, 0.4);
+            transform: translateY(-2px);
         }
 
         input[type="submit"] {
-            background: #667eea;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
-            border: none;
+            border: 1px solid rgba(96, 165, 250, 0.5);
             cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
+            font-size: 17px;
+            font-weight: 600;
+            margin-top: 10px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(59, 130, 246, 0.6);
+        }
+
+        input[type="submit"]:active {
+            transform: translateY(-1px);
+        }
+
+        .result {
+            margin-top: 25px;
+            padding: 25px;
+            background: rgba(34, 197, 94, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 2px solid rgba(34, 197, 94, 0.5);
+            animation: fadeIn 0.5s ease;
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
         }
 
         h2 {
             text-align: center;
-            color: rgb(183, 255, 0);
-            margin-top: 10px;
+            color: #86efac;
+            font-size: 1.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.6);
+            margin: 0;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            form {
+                padding: 30px 25px;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 <body>
 
-<h1>Diabetes Prediction System</h1>
+<div class="container">
+    <h1>Air Quality Index Prediction</h1>
+    <p class="subtitle">Monitor and Predict Environmental Air Quality</p>
 
-<form method="POST">
-    <input type="number" name="PM 1.0" placeholder="PM 1.0" required>
-    <input type="number" name="PM 2.5" placeholder="PM 2.5" required>
-    <input type="number" name="PM 10.0" placeholder="PM 10.0" required>
-    <input type="number" step="0.01" name="Temperature" placeholder="Temperature" required>
-    <input type="number" step="0.01" name="Humidity" placeholder="Humidity" required>
-    <input type="number" step="0.01" name="Gas Resistance" placeholder="Gas Resistance" required>
+    <form method="POST">
+        <div class="input-group">
+            <label for="pm1">PM 1.0 (μg/m³)</label>
+            <input type="number" id="pm1" name="PM 1.0" placeholder="Enter PM 1.0 value" required>
+        </div>
 
-    <input type="submit" value="Predict">
-</form>
+        <div class="input-group">
+            <label for="pm25">PM 2.5 (μg/m³)</label>
+            <input type="number" id="pm25" name="PM 2.5" placeholder="Enter PM 2.5 value" required>
+        </div>
 
-<h2>{{ msg }}</h2>
+        <div class="input-group">
+            <label for="pm10">PM 10.0 (μg/m³)</label>
+            <input type="number" id="pm10" name="PM 10.0" placeholder="Enter PM 10.0 value" required>
+        </div>
+
+        <div class="input-group">
+            <label for="temp">Temperature (°C)</label>
+            <input type="number" step="0.01" id="temp" name="Temperature" placeholder="Enter temperature" required>
+        </div>
+
+        <div class="input-group">
+            <label for="humidity">Humidity (%)</label>
+            <input type="number" step="0.01" id="humidity" name="Humidity" placeholder="Enter humidity level" required>
+        </div>
+
+        <div class="input-group">
+            <label for="gas">Gas Resistance (Ω)</label>
+            <input type="number" step="0.01" id="gas" name="Gas Resistance" placeholder="Enter gas resistance" required>
+        </div>
+
+        <input type="submit" value="Predict AQI">
+    </form>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            <div class="result">
+                <h2>{{ message }}</h2>
+            </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+</div>
 
 </body>
 </html>
