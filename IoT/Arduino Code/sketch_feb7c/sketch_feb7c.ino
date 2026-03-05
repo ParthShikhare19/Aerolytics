@@ -4,19 +4,26 @@
 #include <SoftwareSerial.h>
 #include <PMS.h>
 
-// ---------------- BME680 ----------------
+// -------- BME680 --------
 Adafruit_BME680 bme;
 
-// ---------------- PMS5003 ----------------
+// -------- PMS5003 --------
 SoftwareSerial pmsSerial(10, 11); // RX, TX
 PMS pms(pmsSerial);
 PMS::DATA data;
 
 unsigned long lastPrint = 0;
 
-// ---------------- AQI FUNCTIONS ----------------
+// store last PMS values
+float pm1 = 0;
+float pm25 = 0;
+float pm10 = 0;
+bool pmsDataAvailable = false;
+
+
+// -------- AQI FUNCTIONS --------
 int calculateAQI(float C, float BP_lo, float BP_hi, int I_lo, int I_hi) {
-  return ( (I_hi - I_lo) * (C - BP_lo) ) / (BP_hi - BP_lo) + I_lo;
+  return ((I_hi - I_lo) * (C - BP_lo)) / (BP_hi - BP_lo) + I_lo;
 }
 
 int aqi_pm25(float pm) {
@@ -37,7 +44,6 @@ int aqi_pm10(float pm) {
   else return calculateAQI(pm, 425, 600, 301, 500);
 }
 
-// -------- Air Quality Text --------
 String airQualityLevel(int aqi) {
   if (aqi <= 50) return "Good";
   else if (aqi <= 100) return "Moderate";
@@ -47,50 +53,61 @@ String airQualityLevel(int aqi) {
   else return "Hazardous";
 }
 
-// ---------------- SETUP ----------------
+
+// -------- SETUP --------
 void setup() {
+
   Serial.begin(9600);
 
   pmsSerial.begin(9600);
-  pmsSerial.listen();
 
   Serial.println("System started");
 
-  if (!bme.begin()) {
-    Serial.println("BME680 not found");
-    while (1);
+  if (!bme.begin(0x76)) {
+    Serial.println("Trying BME680 at 0x77...");
+    if (!bme.begin(0x77)) {
+      Serial.println("BME680 not found");
+      while (1);
+    }
   }
 
   bme.setGasHeater(320, 150);
 
-  // PMS5003 warm-up
+  Serial.println("Warming PMS5003...");
   delay(30000);
+
+  Serial.println("Sensors ready");
 }
 
-// ---------------- LOOP ----------------
+
+// -------- LOOP --------
 void loop() {
 
-  pmsSerial.listen(); // always listen to PMS
-
+  // Read PMS continuously
   if (pms.read(data)) {
-    unsigned long now = millis();
+    pm1 = data.PM_AE_UG_1_0;
+    pm25 = data.PM_AE_UG_2_5;
+    pm10 = data.PM_AE_UG_10_0;
+    pmsDataAvailable = true;
+  }
 
-    if (now - lastPrint > 5000) {
-      lastPrint = now;
+  // Print every 5 seconds
+  if (millis() - lastPrint > 5000) {
 
-      float pm1  = data.PM_AE_UG_1_0;
-      float pm25 = data.PM_AE_UG_2_5;
-      float pm10 = data.PM_AE_UG_10_0;
+    lastPrint = millis();
 
-      int aqi25 = aqi_pm25(pm25);
-      int aqi10 = aqi_pm10(pm10);
-      int finalAQI = max(aqi25, aqi10);
+    int aqi25 = aqi_pm25(pm25);
+    int aqi10 = aqi_pm10(pm10);
+    int finalAQI = max(aqi25, aqi10);
 
-      // ---------- PRINT PMS + AQI ----------
+    // PMS DATA
+    if (pmsDataAvailable) {
       Serial.print("PM1.0: ");
       Serial.print(pm1);
+
       Serial.print(" | PM2.5: ");
       Serial.print(pm25);
+
       Serial.print(" | PM10: ");
       Serial.print(pm10);
 
@@ -99,20 +116,27 @@ void loop() {
       Serial.print(" (");
       Serial.print(airQualityLevel(finalAQI));
       Serial.print(") | ");
-
-      // ---------- PRINT BME680 ----------
-      if (bme.performReading()) {
-        Serial.print("Temp: ");
-        Serial.print(bme.temperature);
-        Serial.print(" C | Humidity: ");
-        Serial.print(bme.humidity);
-        Serial.print(" % | Gas: ");
-        Serial.print(bme.gas_resistance / 1000);
-        Serial.print(" KOhms");
-      }
-
-      Serial.println();
-      Serial.println("--------------------------------");
     }
+    else {
+      Serial.print("PMS: No data | ");
+    }
+
+    // BME680 DATA
+    if (bme.performReading()) {
+
+      Serial.print("Temp: ");
+      Serial.print(bme.temperature);
+
+      Serial.print(" C | Humidity: ");
+      Serial.print(bme.humidity);
+
+      Serial.print(" % | Gas: ");
+      Serial.print(bme.gas_resistance / 1000);
+
+      Serial.print(" KOhms");
+    }
+
+    Serial.println();
+    Serial.println("--------------------------------");
   }
 }

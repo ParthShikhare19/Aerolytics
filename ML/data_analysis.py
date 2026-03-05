@@ -32,6 +32,7 @@
 =============================================================================
 """
 
+import sys
 import pandas as pd
 import numpy as np
 import matplotlib
@@ -39,6 +40,9 @@ matplotlib.use('Agg')                    # Non-interactive backend — safe for 
 import matplotlib.pyplot as plt
 import seaborn as sns
 import os
+
+# Ensure console output handles Unicode characters on all platforms
+sys.stdout.reconfigure(encoding='utf-8')
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SETUP
@@ -88,8 +92,8 @@ print("\n" + "=" * 65)
 print("  2. DESCRIPTIVE STATISTICS")
 print("=" * 65)
 desc = df.describe().T.copy()
-desc['range'] = desc['max'] - desc['min']
-desc['cv_%'] = (desc['std'] / desc['mean'] * 100).round(2)   # Coefficient of Variation
+desc.loc[:, 'range'] = desc['max'] - desc['min']
+desc.loc[:, 'cv_%'] = (desc['std'] / desc['mean'] * 100).round(2)   # Coefficient of Variation
 print(desc.to_string())
 print("""
   INTERPRETATION:

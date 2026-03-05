@@ -1,10 +1,10 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
 import psycopg2
 import os
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
-# Load environment variables from .env
 load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -19,11 +19,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Create DB connection
-conn = psycopg2.connect(DATABASE_URL)
+
+class SensorData(BaseModel):
+    pm1: float
+    pm25: float
+    pm10: float
+    aqi: int
+    aqi_category: str
+    temperature: float
+    humidity: float
+    gas: float
+
+
+def get_connection():
+    return psycopg2.connect(DATABASE_URL)
+
 
 @app.post("/insert")
-def insert_data(data: dict):
+def insert_data(data: SensorData):
+
+    conn = get_connection()
     cur = conn.cursor()
 
     cur.execute("""
@@ -31,24 +46,29 @@ def insert_data(data: dict):
         (pm1, pm25, pm10, aqi, aqi_category, temperature, humidity, gas_resistance)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
     """, (
-        data["pm1"],
-        data["pm25"],
-        data["pm10"],
-        data["aqi"],
-        data["aqi_category"],
-        data["temperature"],
-        data["humidity"],
-        data["gas"]
+        data.pm1,
+        data.pm25,
+        data.pm10,
+        data.aqi,
+        data.aqi_category,
+        data.temperature,
+        data.humidity,
+        data.gas
     ))
 
     conn.commit()
     cur.close()
+    conn.close()
 
     return {"status": "success"}
 
+
 @app.get("/latest")
 def get_latest_data():
+
+    conn = get_connection()
     cur = conn.cursor()
+
     cur.execute("""
         SELECT
             pm1, pm25, pm10,
@@ -59,8 +79,11 @@ def get_latest_data():
         ORDER BY created_at DESC
         LIMIT 1
     """)
+
     row = cur.fetchone()
+
     cur.close()
+    conn.close()
 
     if row is None:
         return {"message": "No data available"}

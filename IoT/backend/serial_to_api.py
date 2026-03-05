@@ -9,13 +9,15 @@ API_URL = "http://127.0.0.1:8000/insert"
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
 
 pattern = re.compile(
-    r"PM1.0:\s([\d.]+)\s\|\sPM2.5:\s([\d.]+)\s\|\sPM10:\s([\d.]+)\s\|\sAQI:\s(\d+)\s\(([^)]+)\)\s\|\sTemp:\s([\d.]+)\sC\s\|\sHumidity:\s([\d.]+)\s%\s\|\sGas:\s([\d.]+)"
+r"PM1\.0:\s*([\d.]+).*PM2\.5:\s*([\d.]+).*PM10:\s*([\d.]+).*AQI:\s*(\d+)\s*\((.*?)\).*Temp:\s*([\d.]+).*Humidity:\s*([\d.]+).*Gas:\s*([\d.]+)"
 )
 
 print("Listening to Arduino...")
 
 while True:
     line = ser.readline().decode(errors="ignore").strip()
+    print("RAW:", line)
+
     match = pattern.search(line)
 
     if match:
